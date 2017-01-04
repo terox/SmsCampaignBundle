@@ -1,0 +1,32 @@
+services:
+
+    sms.campaign.factory:
+        class: Terox\SmsCampaignBundle\Service\CampaignFactory
+        arguments:
+            - "@event_dispatcher"
+
+    sms.campaign.sender:
+        class: Terox\SmsCampaignBundle\Service\CampaignSender
+        arguments:
+            - "@sms.job.producer.sms"
+            - "@sms.context.replacer"
+            - "@event_dispatcher"
+
+    sms.context.replacer:
+        class: Terox\SmsCampaignBundle\Service\ContextReplacer
+
+    sms.context.creator:
+        class: Terox\SmsCampaignBundle\Service\ContextCreator
+
+    sms.smpp.transmitter.factory:
+        class: Terox\SmsCampaignBundle\Service\SmppTransmitterFactory
+        arguments:
+            - "%terox_sms_campaign.config%"
+
+    sms.smpp.receiver.factory:
+        class: Terox\SmsCampaignBundle\Service\SmppReceiverFactory
+        arguments:
+            - "%terox_sms_campaign.config%"
+
+    sms.smpp.receiver:
+        class: Terox\SmsCampaignBundle\Service\SmppReceiver

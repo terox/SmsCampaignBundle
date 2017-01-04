@@ -1,0 +1,24 @@
+services:
+    sms.repository.provider:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - Terox\SmsCampaignBundle\Entity\Provider
+
+    sms.repository.campaign:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - Terox\SmsCampaignBundle\Entity\Campaign
+
+    sms.repository.message:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - Terox\SmsCampaignBundle\Entity\Message
+
+    sms.repository.template:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments:
+            - Terox\SmsCampaignBundle\Entity\Template

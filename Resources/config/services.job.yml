@@ -1,0 +1,16 @@
+services:
+
+    sms.job.producer.sms:
+        class: Terox\SmsCampaignBundle\Job\Producer\SmsMessageProducer
+        arguments:
+            - "@old_sound_rabbit_mq.sms_producer"
+
+    sms.job.consumer.sms:
+        class: Terox\SmsCampaignBundle\Job\Consumer\SmsMessageConsumer
+        arguments:
+            - "@logger"
+            - "@doctrine.orm.default_entity_manager"
+            - "@sms.repository.message"
+            - "@sms.smpp.transmitter.factory"
+        tags:
+            - { name: monolog.logger, channel: sms_campaign }

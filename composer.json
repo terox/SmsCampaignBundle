@@ -1,0 +1,41 @@
+{
+    "name": "terox/sms-campaign-bundle",
+    "type": "symfony-bundle",
+    "description": "Symfony Bundle for SMS Campaigns",
+    "keywords": [
+        "SMS",
+        "Short Message Service",
+        "Send SMS",
+        "SMS Campaigns",
+        "SMPP",
+        "Symfony Bundle"
+    ],
+    "homepage": "https://github.com/terox/SmsCampaignBundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "David Pérez Terol",
+            "email": "davidtxnet@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.9",
+        "symfony/yaml": ">=2.8",
+        "symfony/framework-bundle": ">=2.8",
+        "doctrine/orm": "^2.4.8",
+        "doctrine/doctrine-bundle": "~1.4",
+        "stof/doctrine-extensions-bundle": "^1.2",
+        "php-amqplib/rabbitmq-bundle": "^1.12",
+        "its/php-smpp": "~1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Terox\\SmsCampaignBundle\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}

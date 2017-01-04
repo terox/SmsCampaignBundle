@@ -1,0 +1,14 @@
+old_sound_rabbit_mq:
+    producers:
+        sms:
+            connection:       default
+            exchange_options: { name: 'sms', type: direct }
+
+    consumers:
+        sms:
+            connection:       default
+            exchange_options: { name: 'sms', type: direct}
+            queue_options:    { name: 'sms'}
+            callback:         sms.job.consumer.sms
+            enable_logger:    true
+            idle_timeout:     30
