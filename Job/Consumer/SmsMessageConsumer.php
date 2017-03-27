@@ -128,6 +128,8 @@ class SmsMessageConsumer implements ConsumerInterface
 
             $this->lastTransmission = new \DateTime();
 
+            $this->saveMessage($message);
+
         } catch(\Exception $exception) {
 
             $formattedLastTransmission = $this->lastTransmission->format('Y-m-d H:i:s');
