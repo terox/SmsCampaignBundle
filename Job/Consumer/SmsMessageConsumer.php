@@ -5,6 +5,8 @@ namespace Terox\SmsCampaignBundle\Job\Consumer;
 use Monolog\Logger;
 use Doctrine\ORM\EntityManager;
 use OldSound\RabbitMqBundle\RabbitMq\ConsumerInterface;
+use OnlineCity\SMPP\SMPP;
+use OnlineCity\SMPP\SmppClient;
 use PhpAmqpLib\Message\AMQPMessage;
 use Terox\SmsCampaignBundle\Entity\Message;
 use Terox\SmsCampaignBundle\Entity\Provider;
@@ -38,6 +40,11 @@ class SmsMessageConsumer implements ConsumerInterface
     private $connections;
 
     /**
+     * @var null|\DateTime
+     */
+    private $lastTransmission;
+
+    /**
      * SmsConsumer constructor.
      *
      * @param Logger                   $logger
@@ -56,6 +63,8 @@ class SmsMessageConsumer implements ConsumerInterface
         $this->entityManager          = $em;
         $this->messageRepository      = $messageRepository;
         $this->smppTransmitterFactory = $smppTransmitterFactory;
+        $this->connections            = [];
+        $this->lastTransmission       = null;
     }
 
     /**
@@ -66,15 +75,29 @@ class SmsMessageConsumer implements ConsumerInterface
     public function execute(AMQPMessage $msg)
     {
         // Queue message params
-        $body      = (object)unserialize($msg->body);
-        $messageId = $body->messageId;
-        $content   = $body->content;
+        $body       = (object)unserialize($msg->body);
+        $messageId  = $body->messageId;
+        $content    = $body->content;
 
         // Entities
         $message  = $this->messageRepository->findOneById($messageId);
         $provider = $message->getProvider();
         $campaign = $message->getCampaign();
         $template = $campaign->getTemplate();
+
+        // If message have 3 or more attempts of sent, discard
+        if($message->getAttempts() >= 3) {
+
+            $this->logger->error('Message with ID: {id} was discarded', [
+                'id' => $message->getId()
+            ]);
+
+            $this->saveMessage(Message::STATUS_DISCARDED);
+
+            print sprintf('Discarded SMS: %s', $message->getId());
+
+            return;
+        }
 
         $this->logger->info('Preparing message with ID: {id} to send through `{providerName}` with route `{route}`', [
             'message'      => $message->getId(),
@@ -89,20 +112,56 @@ class SmsMessageConsumer implements ConsumerInterface
             return;
         }
 
-        $messageId = $this
-            ->getTransmitter($provider)
-            ->send($template->getSender(), $message->getPhoneNumber(), $content)
-        ;
+        try {
 
-        $message
-            ->setMessageId($messageId)
-            ->setStatus(Message::STATUS_SENT)
-        ;
+            print sprintf('Sending SMS: %s', $message->getId());
 
-        $this->entityManager->persist($message);
-        $this->entityManager->flush();
+            $messageId = $this
+                ->getTransmitter($provider)
+                ->send($template->getSender(), $message->getPhoneNumber(), $content)
+            ;
+
+            $message
+                ->setMessageId($messageId)
+                ->setStatus(Message::STATUS_SENT)
+            ;
+
+            $this->lastTransmission = new \DateTime();
+
+        } catch(\Exception $exception) {
+
+            $formattedLastTransmission = $this->lastTransmission->format('Y-m-d H:i:s');
+
+            print sprintf('Exception. Maybe connection was lost? Last transmission: %s', $formattedLastTransmission);
+
+            $this->logger->info('Something went wrong sending the SMS ({id}): {message}. Maybe the connection with SMPP was lost. The SMS ({id}) will be requeued', [
+                'id'      => $message->getId(),
+                'message' => $exception->getMessage()
+            ]);
+
+            $this->logger->info('Last transmission was at %s', [
+                'datetime' => $formattedLastTransmission
+            ]);
+
+            // Reconnect with the provider
+            $this->reconnect($provider);
+
+            // Change status and increase attempt
+            $message->setStatus(Message::STATUS_REQUEUED)->increaseAttempt();
+            $this->saveMessage($message);
+
+            // Requeue message
+            return false;
+        }
     }
 
+    /**
+     * Get transmitter service.
+     *
+     * @param Provider $provider
+     *
+     * @return mixed
+     */
     private function getTransmitter(Provider $provider)
     {
         if(!isset($this->connections[$provider->getCode()])) {
@@ -114,7 +173,30 @@ class SmsMessageConsumer implements ConsumerInterface
     }
 
     /**
-     * Close all connections.
+     * Reconnect with SMPP provider.
+     *
+     * @param Provider $provider
+     */
+    private function reconnect(Provider $provider)
+    {
+        $this->connections[$provider->getCode()]->openConnection();
+    }
+
+    /**
+     * Save message and clean.
+     *
+     * @param Message $message
+     */
+    private function saveMessage(Message $message)
+    {
+        $this->entityManager->persist($message);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+    }
+
+    /**
+     * Destroy consumer:
+     * - Destroy opened SMPP connections.
      */
     public function __destruct()
     {

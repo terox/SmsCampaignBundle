@@ -24,6 +24,10 @@ class Message
     const STATUS_SENT      = 2;
     const STATUS_DELIVERED = 3;
 
+    const STATUS_REQUEUED  = 90;
+    const STATUS_DISCARDED = 91;
+    const STATUS_FAILED    = 99;
+
     /**
      * @ORM\Id
      * @ORM\Column(type="integer", options={"unsigned":true})
@@ -50,6 +54,13 @@ class Message
     private $campaign;
 
     /**
+     * @ORM\OneToMany(targetEntity="MessageState", mappedBy="message", cascade={"persist", "remove"})
+     *
+     * @var ArrayCollection
+     */
+    private $states;
+
+    /**
      * @ORM\Column(type="string", length=255, nullable=false)
      *
      * @var string
@@ -71,11 +82,11 @@ class Message
     private $status;
 
     /**
-     * @ORM\OneToMany(targetEntity="MessageState", mappedBy="message", cascade={"persist", "remove"})
+     * @ORM\Column(type="integer", nullable=false, options={"unsigned":true, "default":0})
      *
-     * @var ArrayCollection
+     * @var integer
      */
-    private $states;
+    private $attempts;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
@@ -112,8 +123,9 @@ class Message
      */
     public function __construct()
     {
-        $this->status = self::STATUS_PENDING;
-        $this->states = new ArrayCollection();
+        $this->status   = self::STATUS_PENDING;
+        $this->states   = new ArrayCollection();
+        $this->attempts = 0;
     }
 
     /**
@@ -236,6 +248,39 @@ class Message
     public function setStatus($status)
     {
         $this->status = $status;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAttempts()
+    {
+        return $this->attempts;
+    }
+
+    /**
+     * @param mixed $attempts
+     *
+     * @return Message
+     */
+    public function setAttempts($attempts)
+    {
+        $this->attempts = $attempts;
+        return $this;
+    }
+
+    /**
+     * Increase attempt.
+     *
+     * @param integer $number
+     *
+     * @return Message
+     */
+    public function increaseAttempt($number = 1)
+    {
+        $this->attempts += $number;
+
         return $this;
     }
 
