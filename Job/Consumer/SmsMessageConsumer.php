@@ -139,7 +139,7 @@ class SmsMessageConsumer implements ConsumerInterface
                 'message' => $exception->getMessage()
             ]);
 
-            $this->logger->info('Last transmission was at %s', [
+            $this->logger->info('Last transmission was at {datetime}', [
                 'datetime' => $formattedLastTransmission
             ]);
 
