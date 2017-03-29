@@ -92,7 +92,8 @@ class SmsMessageConsumer implements ConsumerInterface
                 'id' => $message->getId()
             ]);
 
-            $this->saveMessage(Message::STATUS_DISCARDED);
+            $message->setStatus(Message::STATUS_DISCARDED);
+            $this->saveMessage($message);
 
             print sprintf("Discarded SMS: %s\n", $message->getId());
 
