@@ -11,4 +11,3 @@ old_sound_rabbit_mq:
             queue_options:    { name: 'sms'}
             callback:         sms.job.consumer.sms
             enable_logger:    true
-            idle_timeout:     30

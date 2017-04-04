@@ -92,9 +92,10 @@ class SmsMessageConsumer implements ConsumerInterface
                 'id' => $message->getId()
             ]);
 
-            $this->saveMessage(Message::STATUS_DISCARDED);
+            $message->setStatus(Message::STATUS_DISCARDED);
+            $this->saveMessage($message);
 
-            print sprintf('Discarded SMS: %s', $message->getId());
+            print sprintf("Discarded SMS: %s\n", $message->getId());
 
             return;
         }
@@ -114,7 +115,7 @@ class SmsMessageConsumer implements ConsumerInterface
 
         try {
 
-            print sprintf('Sending SMS: %s', $message->getId());
+            print sprintf("Sending SMS: %s\n", $message->getId());
 
             $messageId = $this
                 ->getTransmitter($provider)
@@ -134,7 +135,7 @@ class SmsMessageConsumer implements ConsumerInterface
             $timestamp      = $this->lastTransmission;
             $stringDateTime = null !== $timestamp ? date('Y-m-d H:i:s', $timestamp) : '(no transmission)';
 
-            print sprintf('Exception. Maybe connection was lost? Last transmission: %s', $stringDateTime);
+            print sprintf("Exception. Maybe connection was lost? Last transmission: %s\n", $stringDateTime);
 
             $this->logger->info('Something went wrong sending the SMS ({id}): {message}. Maybe the connection with SMPP was lost. The SMS ({id}) will be requeued', [
                 'id'      => $message->getId(),
