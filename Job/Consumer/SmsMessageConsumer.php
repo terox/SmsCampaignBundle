@@ -126,15 +126,15 @@ class SmsMessageConsumer implements ConsumerInterface
                 ->setStatus(Message::STATUS_SENT)
             ;
 
-            $this->lastTransmission = new \DateTime();
-
             $this->saveMessage($message);
+            $this->lastTransmission = time();
 
         } catch(\Exception $exception) {
 
-            $formattedLastTransmission = $this->lastTransmission->format('Y-m-d H:i:s');
+            $timestamp      = $this->lastTransmission;
+            $stringDateTime = null !== $timestamp ? date('Y-m-d H:i:s', $timestamp) : '(no transmission)';
 
-            print sprintf('Exception. Maybe connection was lost? Last transmission: %s', $formattedLastTransmission);
+            print sprintf('Exception. Maybe connection was lost? Last transmission: %s', $stringDateTime);
 
             $this->logger->info('Something went wrong sending the SMS ({id}): {message}. Maybe the connection with SMPP was lost. The SMS ({id}) will be requeued', [
                 'id'      => $message->getId(),
@@ -142,7 +142,7 @@ class SmsMessageConsumer implements ConsumerInterface
             ]);
 
             $this->logger->info('Last transmission was at {datetime}', [
-                'datetime' => $formattedLastTransmission
+                'datetime' =>$stringDateTime
             ]);
 
             // Reconnect with the provider
