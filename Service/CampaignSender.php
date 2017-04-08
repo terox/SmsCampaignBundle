@@ -50,7 +50,7 @@ class CampaignSender
 
                 $context         = $campaign->getContext();
                 $templateContent = $message->getCampaign()->getTemplate()->getContent();
-                var_dump();
+                
                 $templateContent = $this->contextReplacer->replace($templateContent, $context);
                 $messageContent  = new MessageContentEvent($templateContent);
 
