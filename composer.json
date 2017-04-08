@@ -19,14 +19,15 @@
         }
     ],
     "require": {
-        "php": ">=5.3.9",
-        "symfony/yaml": ">=2.8",
-        "symfony/framework-bundle": ">=2.8",
+        "php": ">=5.6.0",
+        "symfony/yaml": "^3.2",
+        "symfony/monolog-bundle": "^3.1",
+        "symfony/framework-bundle": "^3.2",
         "doctrine/orm": "^2.4.8",
         "doctrine/doctrine-bundle": "~1.4",
         "stof/doctrine-extensions-bundle": "^1.2",
         "php-amqplib/rabbitmq-bundle": "^1.12",
-        "terox/php-smpp": "~1.0"
+        "terox/php-smpp": "~1.1"
     },
     "autoload": {
         "psr-4": {

@@ -17,16 +17,3 @@ services:
 
     sms.context.creator:
         class: Terox\SmsCampaignBundle\Service\ContextCreator
-
-    sms.smpp.transmitter.factory:
-        class: Terox\SmsCampaignBundle\Service\SmppTransmitterFactory
-        arguments:
-            - "%terox_sms_campaign.config%"
-
-    sms.smpp.receiver.factory:
-        class: Terox\SmsCampaignBundle\Service\SmppReceiverFactory
-        arguments:
-            - "%terox_sms_campaign.config%"
-
-    sms.smpp.receiver:
-        class: Terox\SmsCampaignBundle\Service\SmppReceiver

@@ -39,11 +39,12 @@ terox_sms_campaign:
 
     providers:
         example_provider:
-            host:     "%smpp_host%"
-            port:     "%smpp_port%"
-            login:    "%smpp_login%"
+            host: "%smpp_host%"
+            port: "%smpp_port%"
+            login: "%smpp_login%"
             password: "%smpp_password%"
-            timeout:  "%smpp_timeout%"
+            timeout_sender: "%smpp_timeout_sender%"
+            timeout_receiver: "%smpp_timeout_receiver%"
 ```
 
 #### 4. If you haven't added the **RabbitMQ bundle** configuration, add it to your ```config.yml```:

@@ -6,8 +6,10 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Terox\SmsCampaignBundle\DependencyInjection\TeroxSmsCampaignExtension;
 use Terox\SmsCampaignBundle\Entity\Message;
 use Terox\SmsCampaignBundle\Entity\MessageState;
+use OnlineCity\SMPP\Unit\SmppDeliveryReceipt;
 
 class UpdateStatusCommand extends ContainerAwareCommand
 {
@@ -38,21 +40,24 @@ class UpdateStatusCommand extends ContainerAwareCommand
         $entityManager      = $this->getContainer()->get('doctrine.orm.default_entity_manager');
         $messageRepository  = $this->getContainer()->get('sms.repository.message');
         $providerRepository = $this->getContainer()->get('sms.repository.provider');
-        $receiverFactory    = $this->getContainer()->get('sms.smpp.receiver.factory');
 
+        // Get provider and receiver service
         $provider = $providerRepository->findOneByCode($providerCode);
-        $receiver = $receiverFactory->create($provider);
+        $receiver = $this->getContainer()->get(TeroxSmsCampaignExtension::NS_RECEIVER.'.'.$provider->getCode());
 
         $output->writeln('<fg=yellow>Connecting...</>');
         $receiver->openConnection();
         $receipts = $receiver->receipts();
 
         if(0 === count($receipts)) {
-            $output->writeln('<fg=blue>> No receipts available</>');
-        } else {
 
-            foreach($receipts as $receipt)
-            {
+            $output->writeln('<fg=red> No receipts available</>');
+
+        } else {
+            $output->writeln(sprintf('<fg=blue> Receipts: %s received</>', count($receipts)));
+
+            /** @var SmppDeliveryReceipt $receipt */
+            foreach($receipts as $receipt) {
                 $message = $messageRepository->findOneByMessageId($receipt->id);
 
                 if(null === $message || Message::STATUS_DELIVERED === $message->getStatus()) {
@@ -69,8 +74,7 @@ class UpdateStatusCommand extends ContainerAwareCommand
                 $message
                     ->setSubmitDate($submitDate)
                     ->setDoneDate($doneDate)
-                    ->addState($state)
-                ;
+                    ->addState($state);
 
                 $output->writeln(
                     sprintf('<fg=green>> Received confirmation from</> <fg=yellow>%s</> (<fg=white>%s</>)',

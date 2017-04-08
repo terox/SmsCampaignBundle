@@ -11,6 +11,7 @@ services:
             - "@logger"
             - "@doctrine.orm.default_entity_manager"
             - "@sms.repository.message"
-            - "@sms.smpp.transmitter.factory"
+        calls:
+            - [setContainer, ['@service_container']]
         tags:
             - { name: monolog.logger, channel: sms_campaign }

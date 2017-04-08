@@ -5,7 +5,7 @@ namespace Terox\SmsCampaignBundle\Smpp;
 use OnlineCity\SMPP\SmppClient;
 use Terox\SmsCampaignBundle\Sms\SmsReceiverInterface;
 
-class SmppReceiver extends SmppBase implements SmsReceiverInterface
+class SmppReceiver extends SmppBaseAbstract implements SmsReceiverInterface
 {
     /**
      * {@inheritdoc}

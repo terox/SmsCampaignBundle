@@ -3,6 +3,7 @@
 namespace Terox\SmsCampaignBundle\Event;
 
 use Symfony\Component\EventDispatcher\Event;
+use Terox\SmsCampaignBundle\Entity\Campaign;
 use Terox\SmsCampaignBundle\Entity\Provider;
 
 class CampaignCreationEvent extends Event
@@ -13,17 +14,17 @@ class CampaignCreationEvent extends Event
     private $campaign;
 
     /**
-     * @var Provider[]
+     * @var null|Provider[]
      */
     private $providers;
 
     /**
      * CampaignCreationEvent constructor.
      *
-     * @param $campaign
-     * @param $providers
+     * @param Campaign         $campaign
+     * @param null|Providers[] $providers
      */
-    public function __construct($campaign, $providers)
+    public function __construct(Campaign $campaign, $providers = null)
     {
         $this->campaign  = $campaign;
         $this->providers = $providers;

@@ -10,7 +10,7 @@ use OnlineCity\SMPP\SMPP;
 use Terox\SmsCampaignBundle\Sms\Provider;
 use Terox\SmsCampaignBundle\Sms\SmsTransmitterInterface;
 
-class SmppTransmitter extends SmppBase implements SmsTransmitterInterface
+class SmppTransmitter extends SmppBaseAbstract implements SmsTransmitterInterface
 {
     /**
      * {@inheritdoc}
