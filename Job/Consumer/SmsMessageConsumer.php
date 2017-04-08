@@ -95,7 +95,7 @@ class SmsMessageConsumer implements ConsumerInterface, ContainerAwareInterface
         $template = $campaign->getTemplate();
 
         // SMPP
-        $transmitter = $this->getTransmitter($provider);
+        $transmitter = $this->getTransmitter($provider)->openConnection();
 
         // If message have 3 or more attempts of sent, discard
         if($message->getAttempts() >= 3) {
