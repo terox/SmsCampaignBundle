@@ -30,8 +30,8 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode('port')->isRequired()->cannotBeEmpty()->end()
                             ->scalarNode('login')->isRequired()->cannotBeEmpty()->end()
                             ->scalarNode('password')->isRequired()->cannotBeEmpty()->end()
-                            ->integerNode('timeout_sender')->cannotBeEmpty()->defaultValue(10000)->end()     // 10 secs
-                            ->integerNode('timeout_receiver')->cannotBeEmpty()->defaultValue(300000)->end()  // 5 mins
+                            ->integerNode('timeout_sender')->defaultValue(10000)->end()     // 10 secs
+                            ->integerNode('timeout_receiver')->defaultValue(300000)->end()  // 5 mins
                             ->arrayNode('options')
                                 ->addDefaultsIfNotSet()
                                 ->children()
