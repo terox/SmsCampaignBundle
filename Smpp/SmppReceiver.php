@@ -22,11 +22,6 @@ class SmppReceiver extends SmppBaseAbstract implements SmsReceiverInterface
      */
     public function receipts()
     {
-        $receipts = [];
-        while($receipt = $this->getClient()->readSMS()) {
-            $receipts[] = $receipt;
-        }
-
-        return $receipts;
+        return new ReceiverIterator($this);
     }
 }

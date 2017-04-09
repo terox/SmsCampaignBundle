@@ -47,20 +47,16 @@ class UpdateStatusCommand extends ContainerAwareCommand
 
         $output->writeln('<fg=yellow>Connecting...</>');
         $receiver->openConnection();
-        $receipts = $receiver->receipts();
-
-        if(0 === count($receipts)) {
-
-            $output->writeln('<fg=red> No receipts available</>');
-
-        } else {
-            $output->writeln(sprintf('<fg=blue> Receipts: %s received</>', count($receipts)));
-
+        $output->writeln('<fg=blue> Checking receipts...</>');
+        
+        try  {
+            
             /** @var SmppDeliveryReceipt $receipt */
-            foreach($receipts as $receipt) {
+            foreach($receiver->receipts() as $receipt) {
                 $message = $messageRepository->findOneByMessageId($receipt->id);
 
                 if(null === $message || Message::STATUS_DELIVERED === $message->getStatus()) {
+                    $output->writeln(sprintf('<fg=yellow> Message (%s) not found</>', $receipt->id));
                     continue;
                 }
 
@@ -77,7 +73,7 @@ class UpdateStatusCommand extends ContainerAwareCommand
                     ->addState($state);
 
                 $output->writeln(
-                    sprintf('<fg=green>> Received confirmation from</> <fg=yellow>%s</> (<fg=white>%s</>)',
+                    sprintf('<fg=green> Received confirmation from</> <fg=yellow>%s</> (<fg=white>%s</>)',
                         $message->getPhoneNumber(),
                         $message->getMessageId()
                     )
@@ -85,11 +81,15 @@ class UpdateStatusCommand extends ContainerAwareCommand
 
                 $entityManager->persist($message);
             }
-
+            
+        } catch(\Exception $e) {
+            $output->write(sprintf('<fg=red>Something was wrong: %s</>', $e->getMessage()));
         }
+        
         $receiver->closeConnection();
         $output->writeln('<fg=yellow>Close connection.</>');
 
         $entityManager->flush();
+        $output->writeln('<fg=green>State saved.</>');
     }
 }
