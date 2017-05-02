@@ -3,6 +3,7 @@
 namespace Terox\SmsCampaignBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -19,14 +20,13 @@ class UpdateStatusCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('sms:status:update')
+            ->setName('sms:dlr:update')
             ->setDescription('Update SMS status')
-            ->addOption(
-                'provider',
-                'p',
-                InputOption::VALUE_REQUIRED,
-                'Name of provider(s) separated by commas where send the messages',
-                'default'
+            ->addArgument(
+                'message',
+                InputArgument::REQUIRED,
+                'JSON encoded DLR',
+                null
             )
         ;
     }
@@ -36,60 +36,33 @@ class UpdateStatusCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $providerCode       = $input->getOption('provider');
+        $dlr                = json_decode($input->getArgument('message'), true);
         $entityManager      = $this->getContainer()->get('doctrine.orm.default_entity_manager');
         $messageRepository  = $this->getContainer()->get('sms.repository.message');
-        $providerRepository = $this->getContainer()->get('sms.repository.provider');
 
-        // Get provider and receiver service
-        $provider = $providerRepository->findOneByCode($providerCode);
-        $receiver = $this->getContainer()->get(TeroxSmsCampaignExtension::NS_RECEIVER.'.'.$provider->getCode());
+        $messageId  = $dlr['id'];
+        $stat       = $dlr['stat'];
+        $submitDate = new \DateTime($dlr['submitDate']);
+        $doneDate   = new \DateTime($dlr['doneDate']);
 
-        $output->writeln('<fg=yellow>Connecting...</>');
-        $receiver->openConnection();
-        $output->writeln('<fg=blue> Checking receipts...</>');
-        
-        try  {
-            
-            /** @var SmppDeliveryReceipt $receipt */
-            foreach($receiver->receipts() as $receipt) {
-                $message = $messageRepository->findOneByMessageId($receipt->id);
+        /** @var Message|null $message */
+        $message = $messageRepository->findOneBy([ 'messageId' => $messageId ]);
 
-                if(null === $message || Message::STATUS_DELIVERED === $message->getStatus()) {
-                    $output->writeln(sprintf('<fg=yellow> Message (%s) not found</>', $receipt->id));
-                    continue;
-                }
-
-                $statusMsg  = $receipt->stat;
-                $submitDate = (new \DateTime())->setTimestamp($receipt->submitDate);
-                $doneDate   = (new \DateTime())->setTimestamp($receipt->doneDate);
-
-                $state = new MessageState();
-                $state->setProviderStatus($statusMsg);
-
-                $message
-                    ->setSubmitDate($submitDate)
-                    ->setDoneDate($doneDate)
-                    ->addState($state);
-
-                $output->writeln(
-                    sprintf('<fg=green> Received confirmation from</> <fg=yellow>%s</> (<fg=white>%s</>)',
-                        $message->getPhoneNumber(),
-                        $message->getMessageId()
-                    )
-                );
-
-                $entityManager->persist($message);
-            }
-            
-        } catch(\Exception $e) {
-            $output->write(sprintf('<fg=red>Something was wrong: %s</>', $e->getMessage()));
+        if(null === $message) {
+            return $output->writeln(sprintf('Message not found: %s', $messageId));
         }
-        
-        $receiver->closeConnection();
-        $output->writeln('<fg=yellow>Close connection.</>');
 
+        $state = new MessageState();
+        $state->setProviderStatus($stat);
+
+        $message
+            ->setSubmitDate($submitDate)
+            ->setDoneDate($doneDate)
+            ->addState($state);
+
+        $entityManager->persist($message);
         $entityManager->flush();
-        $output->writeln('<fg=green>State saved.</>');
+
+        $output->writeln('<fg=green>Success!</>');
     }
 }

@@ -48,6 +48,13 @@ class Provider
     private $cost;
 
     /**
+     * @ORM\Column(type="boolean", nullable=false)
+     *
+     * @var boolean
+     */
+    private $enabled;
+
+    /**
      * Provider constructor.
      */
     public function __construct()
@@ -136,6 +143,25 @@ class Provider
     public function setCost($cost)
     {
         $this->cost = $cost;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * @param bool $enabled
+     *
+     * @return Provider
+     */
+    public function setEnabled($enabled)
+    {
+        $this->enabled = $enabled;
         return $this;
     }
 

@@ -95,7 +95,7 @@ class SmsMessageConsumer implements ConsumerInterface, ContainerAwareInterface
         $template = $campaign->getTemplate();
 
         // SMPP
-        $transmitter = $this->getTransmitter($provider)->openConnection();
+        $transmitter = $this->getTransmitter($provider);
 
         // If message have 3 or more attempts of sent, discard
         if($message->getAttempts() >= 3) {
@@ -129,10 +129,19 @@ class SmsMessageConsumer implements ConsumerInterface, ContainerAwareInterface
 
             print sprintf("SMS: %s sending...\n", $message->getId());
 
-            $messageId = $transmitter->send($template->getSender(), $message->getPhoneNumber(), $content);
+            $transmitter->send(
+                $template->getSender(),
+                $message->getPhoneNumber(),
+                $content,
+                function($messageId) use ($message) {
 
-            $message->setMessageId($messageId)->setStatus(Message::STATUS_SENT);
-            $this->saveMessage($message);
+                    $message
+                        ->setMessageId($messageId)
+                        ->setStatus(Message::STATUS_SENT);
+
+                    $this->saveMessage($message);
+                }
+            );
 
             $this->lastTransmission = time();
 
@@ -159,11 +168,6 @@ class SmsMessageConsumer implements ConsumerInterface, ContainerAwareInterface
             $message->setStatus(Message::STATUS_REQUEUED)->increaseAttempt();
             $this->saveMessage($message);
 
-            // Reset connection
-            $transmitter->closeConnection();
-            $transmitter->openConnection();
-
-            // Requeue message
             return false;
         }
     }
@@ -212,21 +216,9 @@ class SmsMessageConsumer implements ConsumerInterface, ContainerAwareInterface
      */
     private function saveMessage(Message $message)
     {
+        $this->checkDatabaseConnection();
         $this->entityManager->persist($message);
         $this->entityManager->flush();
         $this->entityManager->clear();
-    }
-
-    /**
-     * Destroy consumer:
-     * - Destroy opened SMPP connections.
-     */
-    public function __destruct()
-    {
-        foreach($this->connections as $connection) {
-            if($connection->isOpen()) {
-                $connection->closeConnection();
-            }
-        }
     }
 }

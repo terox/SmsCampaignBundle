@@ -5,7 +5,7 @@ namespace Terox\SmsCampaignBundle\DependencyInjection;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Terox\SmsCampaignBundle\TeroxSmsCampaignBundle;
-use OnlineCity\SMPP\SmppClient;
+
 
 /**
  * This is the class that validates and merges configuration from your app/config files
@@ -30,24 +30,16 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode('port')->isRequired()->cannotBeEmpty()->end()
                             ->scalarNode('login')->isRequired()->cannotBeEmpty()->end()
                             ->scalarNode('password')->isRequired()->cannotBeEmpty()->end()
-                            ->integerNode('timeout_sender')->defaultValue(10000)->end()     // 10 secs
-                            ->integerNode('timeout_receiver')->defaultValue(300000)->end()  // 5 mins
-                            ->arrayNode('options')
+                            ->arrayNode('rpc')
                                 ->addDefaultsIfNotSet()
                                 ->children()
-                                    ->booleanNode('smsNullTerminateOctetstrings')->defaultFalse()->end()
-                                    ->scalarNode('csmsMethod')->defaultValue(SmppClient::CSMS_PAYLOAD)->end()
-                                    ->scalarNode('smsRegisteredDeliveryFlag')->defaultValue(0x00)->end()
+                                    ->scalarNode('exec')->defaultValue('/usr/bin/smpp-cli')->end()
+                                    ->scalarNode('host')->defaultValue('127.0.0.1')->end()
+                                    ->integerNode('port')->defaultValue(7070)->end()
+                                    ->scalarNode('dlr')->defaultValue(null)->end()
                                 ->end()
                             ->end()
                         ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('debug')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->booleanNode('transport')->defaultFalse()->end()
-                        ->booleanNode('smpp')->defaultFalse()->end()
                     ->end()
                 ->end()
             ->end()

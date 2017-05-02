@@ -2,33 +2,32 @@
 
 namespace Terox\SmsCampaignBundle\Smpp;
 
-use OnlineCity\Encoder\GsmEncoder;
-
-use OnlineCity\SMPP\SmppAddress;
-use OnlineCity\SMPP\SmppClient;
-use OnlineCity\SMPP\SMPP;
 use Terox\SmsCampaignBundle\Sms\Provider;
-use Terox\SmsCampaignBundle\Sms\SmsTransmitterInterface;
+use Terox\SmsCampaignBundle\Smpp\SmsTransmitterInterface;
 
-class SmppTransmitter extends SmppBaseAbstract implements SmsTransmitterInterface
+class SmppTransmitter extends SmppBaseAbstract implements SmppTransmitterInterface
 {
     /**
      * {@inheritdoc}
      */
-    protected function bindConnection(SmppClient $smppClient)
+    public function send($from, $to, $message, callable $callback)
     {
-        $smppClient->bindTransmitter($this->getLogin(), $this->getPassword());
-    }
+        $host = $this->getHost();
+        $port = $this->getPort();
 
-    /**
-     * {@inheritdoc}
-     */
-    public function send($from, $to, $message)
-    {
-        $message = GsmEncoder::utf8_to_gsm0338($message);
-        $from    = new SmppAddress($from, is_string($from) ? SMPP::TON_ALPHANUMERIC : SMPP::TON_INTERNATIONAL);
-        $to      = new SmppAddress(intval($to), SMPP::TON_INTERNATIONAL, SMPP::NPI_E164);
+        $this->dnode->connect($host, $port, function($remote, $connection) use ($from, $to, $message, $callback) {
 
-        return $this->getClient()->sendSMS($from, $to, $message);
+            $remote->send([
+                'sourceAddress'      => $from,
+                'destinationAddress' => $to,
+                'message'            => $message
+            ], function($messageId) use ($connection, $callback) {
+                $callback($messageId);
+                $connection->end();
+            });
+
+        });
+
+        $this->loop->run();
     }
 }

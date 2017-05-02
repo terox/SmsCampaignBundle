@@ -44,11 +44,11 @@ class MessageState
     private $createdAt;
 
     /**
-     * MessageStatus constructor.
+     * Constructor.
      */
     public function __construct()
     {
-
+        $this->createdAt = new \DateTime();
     }
 
     /**
@@ -83,7 +83,7 @@ class MessageState
      */
     public function getStatus()
     {
-        return $this->status;
+        return $this->providerStatus;
     }
 
     /**
@@ -93,7 +93,7 @@ class MessageState
      */
     public function setStatus($status)
     {
-        $this->status = $status;
+        $this->providerStatus = $status;
         return $this;
     }
 

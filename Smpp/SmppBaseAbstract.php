@@ -2,113 +2,57 @@
 
 namespace Terox\SmsCampaignBundle\Smpp;
 
-use OnlineCity\SMPP\SmppClient;
-use OnlineCity\SMPP\SMPP;
-use OnlineCity\Transport\SocketTransport;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use Terox\SmsCampaignBundle\Exception\RuntimeException;
 
 abstract class SmppBaseAbstract
 {
     /**
-     * @var SmppClient
-     */
-    private $smppClient;
-
-    /**
      * @var string
      */
-    private $login;
+    private $host;
 
     /**
-     * @var string
+     * @var integer
      */
-    private $password;
+    private $port;
 
     /**
-     * @var boolean
+     * @var React\EventLoop\StreamSelectLoop
      */
-    private $isOpen;
+    protected $loop;
+
+    /**
+     * @var int
+     */
+    protected $dnode;
 
     /**
      * Constructor.
      *
-     * @param SmppClient $smppClient
-     * @param string     $login
-     * @param string     $password
+     * @param string  $host
+     * @param integer $port
      */
-    public function __construct(SmppClient $smppClient, $login, $password)
+    public function __construct($host, $port)
     {
-        $this->smppClient = $smppClient;
-        $this->login      = $login;
-        $this->password   = $password;
-        $this->isOpen     = false;
-    }
-
-    /**
-     * @return SmppClient
-     */
-    public function getClient()
-    {
-        return $this->smppClient;
+        $this->host  = $host;
+        $this->port  = $port;
+        $this->loop  = new \React\EventLoop\StreamSelectLoop();
+        $this->dnode = new \DNode\DNode($this->loop);
     }
 
     /**
      * @return string
      */
-    public function getLogin()
+    public function getHost()
     {
-        return $this->login;
+        return $this->host;
     }
 
     /**
      * @return string
      */
-    public function getPassword()
+    public function getPort()
     {
-        return $this->password;
-    }
-
-    /**
-     * Open connection to SMPP server.
-     *
-     * @return SmppBaseAbstract
-     */
-    public function openConnection()
-    {
-        if(!$this->isOpen()) {
-            $this->getClient()->getTransport()->open();
-            $this->bindConnection($this->smppClient);
-
-            $this->isOpen = true;
-        }
-
-        return $this;
-    }
-
-    abstract protected function bindConnection(SmppClient $smppClient);
-
-    /**
-     * Close connection to SMPP server.
-     *
-     */
-    public function closeConnection()
-    {
-        if(!$this->isOpen()) {
-            return;
-        }
-
-        $this->getClient()->close();
-        $this->isOpen = false;
-    }
-
-    /**
-     * Is transport opened.
-     *
-     * @return bool
-     */
-    public function isOpen()
-    {
-        return $this->isOpen;
+        return $this->port;
     }
 }

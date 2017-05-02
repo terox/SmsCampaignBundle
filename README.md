@@ -1,19 +1,38 @@
 # SmsCampaignBundle
 
-## About
+## About The Project
 
 The **SmsCampaignBundle** provides tools and services to create and send SMS campaigns to a high volume of users. Currently,
 it can send SMS though SMPP client, the most used protocol for send high volumes.
+
+### About the SMPP Client
+
+Due the PHP limitations on persistent and async processes management, I have created the utility [smpp-cli](https://github.com/terox/smpp-cli)
+for NodeJS. This is a little daemon that implements a ```DNode protocol``` to connect the PHP consumers with ***smpp-cli*** 
+processes that sent the SMS through SMPP server.
+
+The impact of implement this architecture is minimum and solves a lot of headaches with SMPP providers like repetitive 
+connections, timeouts, two processes (one to sent, one to receive) etc.
+
+This is completely transparent for developer.
+
+<small>**Note**: The customized [php-smpp](https://github.com/terox/php-smpp) is definitely deprecated.</small>
 
 ## Installation:
 
 #### 1. Require the bundle and its dependencies with composer:
 
-```
-$ composer require terox/sms-campaign-bundle
+```bash
+composer require terox/sms-campaign-bundle
 ```
 
-#### 2. Register SmsCampaignBundle and RabbitMQBundle in your AppKernel.php:
+#### 2. Install ```smpp-cli```:
+
+```bash
+npm install -g smpp-cli
+```
+
+#### 2. Register ```SmsCampaignBundle``` and ```RabbitMQBundle``` in your AppKernel.php:
 
 ```php
 public function registerBundles()
@@ -29,25 +48,21 @@ public function registerBundles()
 }
 ```
 
-#### 3. Add **SmsCampaignBundle** configuration to your ```config.yml```:
+#### 3. Add the ```SmsCampaignBundle``` configuration to your ```config.yml```:
 
 ```yaml
 terox_sms_campaign:
-    debug:
-        transport: false
-        smpp: false
-
     providers:
         example_provider:
             host: "%smpp_host%"
             port: "%smpp_port%"
             login: "%smpp_login%"
             password: "%smpp_password%"
-            timeout_sender: "%smpp_timeout_sender%"
-            timeout_receiver: "%smpp_timeout_receiver%"
+            rpc:
+              port: 7070
 ```
 
-#### 4. If you haven't added the **RabbitMQ bundle** configuration, add it to your ```config.yml```:
+#### 4. If you haven't added the ```RabbitMQBundle``` configuration, add it to your ```config.yml```:
 You are free to configure the RabbitMQ bundle. The producers and consumers **are preconfigured in SmsCampaignBundle**.
 
 ```yaml
