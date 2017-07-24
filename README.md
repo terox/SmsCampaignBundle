@@ -87,14 +87,37 @@ old_sound_rabbit_mq:
 
 ## Usage
 
-...
+There are two ways to start the SMPP daemon (```smpp-cli```):
+
+### A. Start the SMPP daemon manually (recommended):
+
+This will execute the daemon and will listen the ```dnode``` port. You need to pass your credentials manually:
+
+```bash
+smpp-cli listen 7070 -h smpp.example.com -p 2675 -L userLogin -P userPassword -C "/var/www/bin/console sms:dlr:update"
+```
+***Note:*** You can use as many demons as you need, for example if you have more than one SMPP provider; only change the port number.
+
+I recommend you that executes this command inside [supervisor](http://supervisord.org/) to keep it running if something was
+wrong (like server updates, unexpected errors...).
+
+#### Keep in mind:
+* The credentials could be shown at the process manager (like ```htop```) depending on how you pass the credentials to smpp-cli.
+* If you use some deployment scripts, be sure to hide the sensitive data where you store these scripts.
+
+### B. Start the SMPP daemon with a Symfony console:
+
+The propose of this command is to use the Symfony configuration params to configure the ```smpp-cli``` daemons:
+
+```bash
+/var/www/bin/console sms:start:client
+```
+***Warning!*** This command still not working as I expected. It need little more research. I hope fix it in the next major release,
+but you are free to sent your PR.
 
 ## TODO
-
-* Improve documentation
-* Improve "bundle"
-* Entity refactor and Message model extension
+[ ] Message model extension
 
 ## License
 
-See: resources/meta/LICENSE.md
+See: [LICENSE.md](LICENSE.md)
